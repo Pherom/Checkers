@@ -1,5 +1,6 @@
 ﻿using UI;
 using Engine;
+using System;
 
 namespace Checkers
 {
@@ -26,15 +27,29 @@ namespace Checkers
                         if (game.CurrentPlayer.IsHuman == true)
                         {
                             currentPlayerTurn = playerTurnForm.DisplayAndGetResult(game.CurrentPlayer.Name);
-                            playerTurnValid = currentPlayerTurn.IsValid(game);
-                            if (playerTurnValid == false)
+                            if (currentPlayerTurn.Quit == true)
                             {
-                                //DISPLAY ERROR
+                                playerTurnValid = true;
+                            }
+                            else
+                            {
+                                playerTurnValid = currentPlayerTurn.IsValid(game);
+                                if (playerTurnValid == false)
+                                {
+                                    UIMessages.DisplayInvalidPlayerTurnEngineErrorMessage();
+                                    playerTurnForm.ResetForm();
+                                }
                             }
                         }
                         else
                         {
-                            //currentPlayerTurn = PlayerTurn.GenerateRandomValidTurn(game.Board);
+                            Console.WriteLine("==========================");
+                            Console.WriteLine("Implement GenerateRandomValidTurn to make it working");
+                            Console.WriteLine("==========================");
+                            Console.WriteLine();
+                            Console.WriteLine();
+                            Console.WriteLine();
+                            currentPlayerTurn = currentPlayerTurn.GenerateRandomValidTurn(game);
                             playerTurnValid = true;
                         }
                     }
@@ -47,17 +62,18 @@ namespace Checkers
                 switch (game.Status)
                 {
                     case Game.eGameStatus.WON:
-                        //DISPLAY WON MESSAGE
+                        UIMessages.DisplayWinnerMessage(game);
                         break;
                     case Game.eGameStatus.QUIT:
-                        //DISPLAY QUIT AND WON MESSAGE
+                        UIMessages.DisplayQuitMessage(game);
                         break;
                     case Game.eGameStatus.DRAW:
-                        //DISPLAY DRAW MESSAGE
+                        UIMessages.DisplayDrawMessage(game);
                         break;
                 }
 
                 newGameRequested = newGameRequestForm.DisplayAndGetResult();
+                game.CheckNewGameRequest(newGameRequested);
             }
         }
 

@@ -5,7 +5,7 @@ namespace UI
 {
     public class PlayerTurnForm
     {
-        private const char k_QuitChar = 'Q';
+        private const string k_QuitChar = "Q";
         private const string k_InvalidTurnEntered = "Invalid move";
         private const string k_NoTurnCreatedErrorMessage = "Turn was not created yet";
         private string m_Input;

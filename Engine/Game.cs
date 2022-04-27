@@ -27,7 +27,7 @@ namespace Engine
         private Player m_CurrPlayer;
         private Player m_Winner = null;
         private Board m_Board;
-        private List<PlayerTurn> requiredTurns = new List<PlayerTurn>();
+        private List<PlayerTurn> m_RequiredTurns = new List<PlayerTurn>();
 
         public eGamemode Gamemode
         {
@@ -69,6 +69,14 @@ namespace Engine
             }
         }
 
+        public List<PlayerTurn> RequiredTurns
+        {
+            get
+            {
+                return m_RequiredTurns;
+            }
+        }
+
         public eGameStatus Status
         {
             get
@@ -93,9 +101,11 @@ namespace Engine
         {
             m_Board = i_Board;
             m_Player1 = i_Player1;
+            m_Player1.InitScoreAndList(m_Board.GetInitialPointsPerPlayer());
             m_Player2 = new Player("Computer", false);
-            m_Gamemode = eGamemode.SINGLEPLAYER;
+            m_Player2.InitScoreAndList(m_Board.GetInitialPointsPerPlayer());
             m_CurrPlayer = m_Player1;
+            m_Gamemode = eGamemode.SINGLEPLAYER;
             m_Board.PopulateBoard(m_Player1, m_Player2);
         }
 
@@ -103,43 +113,167 @@ namespace Engine
         {
             m_Board = i_Board;
             m_Player1 = i_Player1;
+            m_Player1.InitScoreAndList(m_Board.GetInitialPointsPerPlayer());
             m_Player2 = i_Player2;
-            m_Gamemode = eGamemode.MULTIPLAYER;
+            m_Player2.InitScoreAndList(m_Board.GetInitialPointsPerPlayer());
             m_CurrPlayer = m_Player1;
+            m_Gamemode = eGamemode.MULTIPLAYER;
             m_Board.PopulateBoard(m_Player1, m_Player2);
         }
 
         public void ExecuteTurn(PlayerTurn i_Turn)
         {
+            bool ateOpponent;
             if (i_Turn.Quit == true)
             {
                 m_Status = eGameStatus.QUIT;
             } 
             else
             {
-                // execute turn
+                ateOpponent = i_Turn.checkAteOpponent(this);
+                // Execute turn
                 Board.Content[i_Turn.EndRow, i_Turn.EndCol].CopyPiece(Board.Content[i_Turn.StartRow, i_Turn.StartCol]);
-                CurrentPlayer.Pieces.Remove(Board.Content[i_Turn.StartRow, i_Turn.StartCol]);
-                CurrentPlayer.Pieces.Add(Board.Content[i_Turn.EndRow, i_Turn.EndCol]);
+                i_Turn.checkIfNewEndPosIsCrownAndCrownIfNeeded(this);
+                i_Turn.updatePlayerPiecesListAccordingToTurn(this);
                 Board.Content[i_Turn.StartRow, i_Turn.StartCol].Empty(); // Setting whitespace in startPos
 
+                // check if ate opponent and accordingly update the required turns list
+                if (ateOpponent == true)
+                {
+                    updatePotentialEatingSurroundingsInRequiredTurns(Board.Content[i_Turn.EndRow, i_Turn.EndCol]);
+                    DestroyOpponent(i_Turn);
+                }
+                else
+                {
+                    m_RequiredTurns.Clear();
+                }
 
-                // if didnt eat
-                if (m_Status == eGameStatus.RUNNING)
+                // if the current player doesnt have any required turns to do in his next turn
+                if (m_RequiredTurns.Count == 0)
                 {
                     switchTurn();
+                }
+
+                checkAndUpdateGameStatus();
+            }
+        }
+
+        private void updatePotentialEatingSurroundingsInRequiredTurns(Board.Piece i_StartPos)
+        {
+            int potentialRowValue;
+            if (i_StartPos.IsKing == true)
+            {
+                // Add all possible 4 moves for king in case of eating
+                for (int row = -2; row <= 2; row += 4)
+                {
+                    for (int col = -2; col <= 2; col += 4)
+                    {
+                        RequiredTurns.Add(new PlayerTurn(i_StartPos.Row, i_StartPos.Col, row, col));
+                    }
+                }
+            }
+            else
+            {
+                potentialRowValue = (i_StartPos.Owner == Player1) ? (i_StartPos.Row + 2) : (i_StartPos.Row - 2);
+                RequiredTurns.Add(new PlayerTurn(i_StartPos.Row, i_StartPos.Col, potentialRowValue, i_StartPos.Col - 2));
+                RequiredTurns.Add(new PlayerTurn(i_StartPos.Row, i_StartPos.Col, potentialRowValue, i_StartPos.Col + 2));
+            }
+
+            // Remove the turns that shouldn't be in the required turns list
+            for (int i = RequiredTurns.Count - 1; i >= 0; i--)
+            {
+                // If invalid move or didnt ate opponent
+                if (RequiredTurns[i].IsValid(this) == false || RequiredTurns[i].checkAteOpponent(this) == false)
+                {
+                    RequiredTurns.RemoveAt(i);
+                }
+            }
+        }
+
+
+        private void updatePointsAndEmptyEatenOpponent(Board.Piece i_EatenPiece)
+        {
+            i_EatenPiece.Owner.AddToScore(-1);
+            getOpponent(i_EatenPiece.Owner).AddToScore(i_EatenPiece.IsKing == true ? 4 : 1);
+            i_EatenPiece.Empty();
+        }
+
+        private void DestroyOpponent(PlayerTurn i_Turn)
+        {
+            Board.Piece potentialMove = i_Turn.potentialPieceJumpedOverIfRegular(this);
+            if (i_Turn.checkOpponentIsLocatedInPotentialPiece(this, potentialMove))
+            {
+                updatePointsAndEmptyEatenOpponent(potentialMove);
+            }
+            else if (Board.Content[i_Turn.EndRow, i_Turn.EndCol].IsKing == true)
+            {
+                potentialMove = i_Turn.potentialPieceJumpedOverIfKingAndGoingToNotNativeDirection(this);
+                if (i_Turn.checkOpponentIsLocatedInPotentialPiece(this, potentialMove))
+                {
+                    updatePointsAndEmptyEatenOpponent(potentialMove);
                 }
             }
         }
 
         private void switchTurn()
         {
-            m_CurrPlayer = m_CurrPlayer == m_Player1 ? m_Player2 : m_Player1;
+            m_CurrPlayer = getOpponent(m_CurrPlayer);
+        }
+
+        private Player getOpponent(Player i_Player)
+        {
+            return i_Player == m_Player1 ? m_Player2 : m_Player1;
+        }
+
+        public Player getWinner()
+        {
+            Player winner = null;
+            if (Player1.Pieces.Count == 0 || !existAvailableMoves(Player1))
+            {
+                winner = Player2;
+            }
+            else if (Player2.Pieces.Count == 0 || !existAvailableMoves(Player2))
+            {
+                winner = Player1;
+            }
+
+            return winner;
+        }
+
+        // Implement
+        private bool existAvailableMoves(Player player)
+        {
+            return true;
         }
 
         private void checkAndUpdateGameStatus()
         {
+            Player winner = getWinner();
+            if (winner != null)
+            {
+                m_Status = eGameStatus.WON;
+            }
+            else if (checkDraw())
+            {
+                m_Status = eGameStatus.DRAW;
+            }
+        }
+        private bool checkDraw()
+        {
+            return !existAvailableMoves(Player1) && !existAvailableMoves(Player2);
+        }
 
+        public void CheckNewGameRequest(bool i_RequestedNewGame)
+        {
+            if (i_RequestedNewGame == true)
+            {
+                m_Status = eGameStatus.RUNNING;
+                m_CurrPlayer = Player1;
+                m_Player1.InitScore(m_Board.GetInitialPointsPerPlayer());
+                m_Player2.InitScore(m_Board.GetInitialPointsPerPlayer());   
+                Board.ResetBoard(Player1, Player2);
+                Board.PopulateBoard(Player1, Player2);
+            }
         }
 
     }

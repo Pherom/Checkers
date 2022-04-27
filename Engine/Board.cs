@@ -37,6 +37,28 @@ namespace Engine
                 }
             }
 
+            public int Row
+            {
+                get
+                {
+                    return m_Row;
+                }
+            }
+
+            public int Col
+            {
+                get
+                {
+                    return m_Col;
+                }
+            }
+
+            public Piece(int i_Row, int i_Col)
+            {
+                m_Row = i_Row;
+                m_Col = i_Col;
+            }
+
             public void CopyPiece(Piece piece)
             {
                 // No need to copy row and col, because it's changed to the current m_Row, m_Col, so only updating the rest
@@ -105,7 +127,7 @@ namespace Engine
             {
                 for (int col = 0; col < m_Size; col++)
                 {
-                    m_Content[row, col] = new Piece();
+                    m_Content[row, col] = new Piece(row, col);
                 }
             }
         }
@@ -143,6 +165,8 @@ namespace Engine
         {
             if (m_IsEmpty == false)
             {
+                player1.Pieces.Clear();
+                player2.Pieces.Clear();
                 for (int row = 0; row < m_Size; row++)
                 {
                     for (int col = 0; col < m_Size; col++)
@@ -154,6 +178,10 @@ namespace Engine
             }
         }
 
+        public int GetInitialPointsPerPlayer()
+        {
+            return m_Size * (m_Size / 2 - 1) / 2;
+        }
         private bool checkSizeValidity(int i_Size)
         {
             return sr_AvailableBoardSizes.Contains(i_Size);
