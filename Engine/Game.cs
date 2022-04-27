@@ -111,10 +111,24 @@ namespace Engine
 
         public void ExecuteTurn(PlayerTurn i_Turn)
         {
-            // if didnt eat
-            if (m_Status == eGameStatus.RUNNING)
+            if (i_Turn.Quit == true)
             {
-                switchTurn();
+                m_Status = eGameStatus.QUIT;
+            } 
+            else
+            {
+                // execute turn
+                Board.Content[i_Turn.EndRow, i_Turn.EndCol].CopyPiece(Board.Content[i_Turn.StartRow, i_Turn.StartCol]);
+                CurrentPlayer.Pieces.Remove(Board.Content[i_Turn.StartRow, i_Turn.StartCol]);
+                CurrentPlayer.Pieces.Add(Board.Content[i_Turn.EndRow, i_Turn.EndCol]);
+                Board.Content[i_Turn.StartRow, i_Turn.StartCol].Empty(); // Setting whitespace in startPos
+
+
+                // if didnt eat
+                if (m_Status == eGameStatus.RUNNING)
+                {
+                    switchTurn();
+                }
             }
         }
 

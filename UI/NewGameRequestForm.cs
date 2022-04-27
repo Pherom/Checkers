@@ -22,7 +22,17 @@ namespace UI
 
         public void Display()
         {
+            while (m_Result == null)
+            {
+                try
+                {
 
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
         }
 
         public bool DisplayAndGetResult()

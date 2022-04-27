@@ -8,10 +8,10 @@ namespace Checkers
         public void Start()
         {
             Game game = new GameCreationForm().DisplayAndGetResult();
-            BoardView boardView = new BoardView(game.Board);
+            BoardView boardView = new BoardView(game.Board, game.Player1, game.Player2);
             PlayerTurnForm playerTurnForm = new PlayerTurnForm();
             NewGameRequestForm newGameRequestForm = new NewGameRequestForm();
-            PlayerTurn currentPlayerTurn;
+            PlayerTurn currentPlayerTurn = null;
             bool playerTurnValid = false;
             bool newGameRequested = true;
 
@@ -19,6 +19,7 @@ namespace Checkers
             {
                 while (game.Status == Game.eGameStatus.RUNNING)
                 {
+                    Ex02.ConsoleUtils.Screen.Clear();
                     boardView.DisplayBoard();
                     while (playerTurnValid == false)
                     {
@@ -33,13 +34,14 @@ namespace Checkers
                         }
                         else
                         {
-                            currentPlayerTurn = PlayerTurn.GenerateRandomValidTurn(game.Board);
+                            //currentPlayerTurn = PlayerTurn.GenerateRandomValidTurn(game.Board);
                             playerTurnValid = true;
                         }
                     }
 
                     game.ExecuteTurn(currentPlayerTurn);
                     playerTurnValid = false;
+                    playerTurnForm.ResetForm();
                 }
 
                 switch (game.Status)

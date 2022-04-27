@@ -24,7 +24,20 @@ namespace UI
 
         public void Display()
         {
-
+            bool isHuman = true;
+            while (m_Result == null)
+            {
+                try
+                {
+                    Console.Write("Enter player name: ");
+                    m_PlayerName = Console.ReadLine();
+                    m_Result = new Player(m_PlayerName, isHuman);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
         }
 
         public Player DisplayAndGetResult()

@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Engine
 {
@@ -46,6 +42,14 @@ namespace Engine
             }
         }
 
+        public bool Quit
+        {
+            get
+            {
+                return m_Quit;
+            }
+        }
+
         public PlayerTurn(bool i_Quit)
         {
             m_Quit = i_Quit;
@@ -58,15 +62,35 @@ namespace Engine
             m_EndRow = i_EndRow;
             m_EndCol = i_EndCol;
         }
-
-        public bool IsValid(Game game)
+        
+        private bool isInRange(int i_Size)
         {
-            //Check that CurrentPlayer piece is in starting position
+            return m_StartRow < i_Size && m_StartCol < i_Size && m_EndRow < i_Size && m_EndCol < i_Size;
+        }
+
+        private bool checkCurrentPlayerPieceIsInStartingPosition(Game i_Game)
+        {
+            return i_Game.Board.Content[m_StartRow, m_StartCol].Owner == i_Game.CurrentPlayer;
+        }
+
+        private bool checkWhitespaceAtEndPosition(Game i_Game)
+        {
+            return i_Game.Board.Content[m_EndRow, m_EndCol].IsEmpty;
+        }
+
+
+
+        public bool IsValid(Game i_Game)
+        {
+            return isInRange(i_Game.Board.Size) && checkCurrentPlayerPieceIsInStartingPosition(i_Game) &&
+                checkWhitespaceAtEndPosition(i_Game);
+            //Check that is within the bounds of the board V
+            //Check that CurrentPlayer piece is in starting position  V
+            //Check that the end position is empty V
             //Check that if m_RequiredTurns is not empty, the turn is contained within it
-            //Check that is within the bounds of the board
-            //Check that the end position is empty
             //Check that either moving directly or eating an opponent
             //Check that if not king, is not moving backwards
         }
+
     }
 }
