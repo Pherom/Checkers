@@ -1,6 +1,7 @@
 ﻿using UI;
 using Engine;
 using System;
+using System.Threading;
 
 namespace Checkers
 {
@@ -33,7 +34,7 @@ namespace Checkers
                             }
                             else
                             {
-                                playerTurnValid = currentPlayerTurn.IsValid(game);
+                                playerTurnValid = currentPlayerTurn.IsValidForCurrentPlayer(game);
                                 if (playerTurnValid == false)
                                 {
                                     UIMessages.DisplayInvalidPlayerTurnEngineErrorMessage();
@@ -43,13 +44,8 @@ namespace Checkers
                         }
                         else
                         {
-                            Console.WriteLine("==========================");
-                            Console.WriteLine("Implement GenerateRandomValidTurn to make it working");
-                            Console.WriteLine("==========================");
-                            Console.WriteLine();
-                            Console.WriteLine();
-                            Console.WriteLine();
-                            currentPlayerTurn = currentPlayerTurn.GenerateRandomValidTurn(game);
+                            currentPlayerTurn = PlayerTurn.GenerateRandomValidTurn(game);
+                            Thread.Sleep(3000);
                             playerTurnValid = true;
                         }
                     }
@@ -58,6 +54,8 @@ namespace Checkers
                     playerTurnValid = false;
                     playerTurnForm.ResetForm();
                 }
+
+                boardView.DisplayBoard();
 
                 switch (game.Status)
                 {

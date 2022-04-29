@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using Engine;
 
 namespace UI
@@ -29,7 +30,8 @@ namespace UI
                 try
                 {
                     bool validIntEntered;
-                    Console.Write("Enter board size: ");
+
+                    Console.Write(String.Format("Enter board size (available options: {0}): ", string.Join(", ", Board.AvailableBoardSizes.ToArray())));
                     validIntEntered = int.TryParse(Console.ReadLine(), out m_Size);
                     if (validIntEntered == false)
                     {

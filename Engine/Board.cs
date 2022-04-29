@@ -85,6 +85,27 @@ namespace Engine
             {
                 m_IsKing = true;
             }
+
+            public List<PlayerTurn> GetAvailableMoves(Game i_Game, Player i_Player)
+            {
+                List<PlayerTurn> availableMoves = new List<PlayerTurn>();
+                PlayerTurn checkedMove;
+                int[,] directions = new int[,]{ { 1, 1 }, { 1, -1 }, { -1, -1 }, { -1, 1 } };
+
+                for (int amplifier = 1; amplifier <= 2; amplifier++)
+                {
+                    for(int i = 0; i < directions.GetLength(0); i++)
+                    {
+                        checkedMove = new PlayerTurn(m_Row, m_Col, m_Row + (directions[i, 0] * amplifier), m_Col + (directions[i, 1] * amplifier));
+                        if (checkedMove.IsValidForPlayer(i_Game, i_Player))
+                        {
+                            availableMoves.Add(checkedMove);
+                        }
+                    }
+                }
+
+                return availableMoves;
+            }
         }
 
         private static readonly List<int> sr_AvailableBoardSizes = new List<int>{6, 8, 10};
@@ -92,6 +113,14 @@ namespace Engine
         private int m_Size;
         private Piece[,] m_Content;
         private bool m_IsEmpty = true;
+
+        public static List<int> AvailableBoardSizes
+        {
+            get
+            {
+                return sr_AvailableBoardSizes;
+            }
+        }
 
         public int Size
         {

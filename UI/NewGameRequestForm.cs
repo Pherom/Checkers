@@ -28,7 +28,7 @@ namespace UI
                 try
                 {
                     bool requestedNewGame = true;
-                    Console.WriteLine("Do you want to rematch? y/n");
+                    Console.WriteLine("Play again? y/n");
                     m_Input = Console.ReadLine();
                     if (!(m_Input.ToLower().Equals("y") || m_Input.ToLower().Equals("n")))
                     {

@@ -31,7 +31,7 @@ namespace UI
                 try
                 {
                     bool validIntEntered;
-                    Console.WriteLine(string.Format("Enter the number of gamemode you want to play: (1/2){0}1. Singleplayer{0}2. Multiplayer", Environment.NewLine));
+                    Console.WriteLine(string.Format("Enter the number that represents the gamemode you want to play: (1/2){0}1. Singleplayer{0}2. Multiplayer", Environment.NewLine));
                     validIntEntered = int.TryParse(Console.ReadLine(), out m_Input);
                     if (validIntEntered == false)
                     {

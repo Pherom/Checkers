@@ -130,11 +130,11 @@ namespace Engine
             } 
             else
             {
-                ateOpponent = i_Turn.checkAteOpponent(this);
+                ateOpponent = i_Turn.CheckAteOpponent(this);
                 // Execute turn
                 Board.Content[i_Turn.EndRow, i_Turn.EndCol].CopyPiece(Board.Content[i_Turn.StartRow, i_Turn.StartCol]);
-                i_Turn.checkIfNewEndPosIsCrownAndCrownIfNeeded(this);
-                i_Turn.updatePlayerPiecesListAccordingToTurn(this);
+                i_Turn.CheckIfNewEndPosIsCrownAndCrownIfNeeded(this);
+                i_Turn.UpdatePlayerPiecesListAccordingToTurn(this);
                 Board.Content[i_Turn.StartRow, i_Turn.StartCol].Empty(); // Setting whitespace in startPos
 
                 // check if ate opponent and accordingly update the required turns list
@@ -183,7 +183,7 @@ namespace Engine
             for (int i = RequiredTurns.Count - 1; i >= 0; i--)
             {
                 // If invalid move or didnt ate opponent
-                if (RequiredTurns[i].IsValid(this) == false || RequiredTurns[i].checkAteOpponent(this) == false)
+                if (RequiredTurns[i].IsValidForCurrentPlayer(this) == false || RequiredTurns[i].CheckAteOpponent(this) == false)
                 {
                     RequiredTurns.RemoveAt(i);
                 }
@@ -200,15 +200,15 @@ namespace Engine
 
         private void DestroyOpponent(PlayerTurn i_Turn)
         {
-            Board.Piece potentialMove = i_Turn.potentialPieceJumpedOverIfRegular(this);
-            if (i_Turn.checkOpponentIsLocatedInPotentialPiece(this, potentialMove))
+            Board.Piece potentialMove = i_Turn.GetPotentialPieceJumpedOverIfRegular(this);
+            if (i_Turn.CheckOpponentIsLocatedInPotentialPiece(this, potentialMove))
             {
                 updatePointsAndEmptyEatenOpponent(potentialMove);
             }
             else if (Board.Content[i_Turn.EndRow, i_Turn.EndCol].IsKing == true)
             {
-                potentialMove = i_Turn.potentialPieceJumpedOverIfKingAndGoingToNotNativeDirection(this);
-                if (i_Turn.checkOpponentIsLocatedInPotentialPiece(this, potentialMove))
+                potentialMove = i_Turn.GetPotentialPieceJumpedOverIfKingAndGoingToNotNativeDirection(this);
+                if (i_Turn.CheckOpponentIsLocatedInPotentialPiece(this, potentialMove))
                 {
                     updatePointsAndEmptyEatenOpponent(potentialMove);
                 }
@@ -225,14 +225,14 @@ namespace Engine
             return i_Player == m_Player1 ? m_Player2 : m_Player1;
         }
 
-        public Player getWinner()
+        public Player GetWinner()
         {
             Player winner = null;
-            if (Player1.Pieces.Count == 0 || !existAvailableMoves(Player1))
+            if (Player1.Pieces.Count == 0 || !hasAvailableMoves(Player1))
             {
                 winner = Player2;
             }
-            else if (Player2.Pieces.Count == 0 || !existAvailableMoves(Player2))
+            else if (Player2.Pieces.Count == 0 || !hasAvailableMoves(Player2))
             {
                 winner = Player1;
             }
@@ -240,15 +240,25 @@ namespace Engine
             return winner;
         }
 
-        // Implement
-        private bool existAvailableMoves(Player player)
+        private bool hasAvailableMoves(Player player)
         {
-            return true;
+            bool has = false;
+
+            foreach (Board.Piece piece in player.Pieces)
+            {
+                if (piece.GetAvailableMoves(this, player).Count > 0)
+                {
+                    has = true;
+                    break;
+                }
+            }
+
+            return has;
         }
 
         private void checkAndUpdateGameStatus()
         {
-            Player winner = getWinner();
+            Player winner = GetWinner();
             if (winner != null)
             {
                 m_Status = eGameStatus.WON;
@@ -260,7 +270,7 @@ namespace Engine
         }
         private bool checkDraw()
         {
-            return !existAvailableMoves(Player1) && !existAvailableMoves(Player2);
+            return !hasAvailableMoves(Player1) && !hasAvailableMoves(Player2);
         }
 
         public void CheckNewGameRequest(bool i_RequestedNewGame)

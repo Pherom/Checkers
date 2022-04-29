@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Engine
 {
@@ -72,7 +73,12 @@ namespace Engine
 
         private bool checkCurrentPlayerPieceIsInStartingPosition(Game i_Game)
         {
-            return i_Game.Board.Content[m_StartRow, m_StartCol].Owner == i_Game.CurrentPlayer;
+            return checkPlayerPieceIsInStartingPosition(i_Game, i_Game.CurrentPlayer);
+        }
+
+        private bool checkPlayerPieceIsInStartingPosition(Game i_Game, Player i_Player)
+        {
+            return i_Game.Board.Content[m_StartRow, m_StartCol].Owner == i_Player;
         }
 
         private bool checkWhitespaceAtEndPosition(Game i_Game)
@@ -100,13 +106,13 @@ namespace Engine
             return i_Game.RequiredTurns.Count == 0 ? true : checkIfRequiredListContainsThisTurn(i_Game);
         }
 
-        public bool checkOpponentIsLocatedInPotentialPiece(Game i_Game, Board.Piece i_PotentialOppponentPiece)
+        public bool CheckOpponentIsLocatedInPotentialPiece(Game i_Game, Board.Piece i_PotentialOppponentPiece)
         {
             return (i_PotentialOppponentPiece.IsEmpty == false) && (i_Game.CurrentPlayer != i_PotentialOppponentPiece.Owner);
         }
 
 
-        public Board.Piece potentialPieceJumpedOverIfRegular(Game i_Game)
+        public Board.Piece GetPotentialPieceJumpedOverIfRegular(Game i_Game)
         {
             Board.Piece res = null;
             int potentialOpponentPieceColValue = (m_EndCol - m_StartCol == 2) ? (m_EndCol - 1) : (m_EndCol + 1);
@@ -122,7 +128,7 @@ namespace Engine
             return res;
         }
 
-        public Board.Piece potentialPieceJumpedOverIfKingAndGoingToNotNativeDirection(Game i_Game)
+        public Board.Piece GetPotentialPieceJumpedOverIfKingAndGoingToNotNativeDirection(Game i_Game)
         {
             Board.Piece res = null;
             int potentialOpponentPieceColValue = (m_EndCol - m_StartCol == 2) ? (m_EndCol - 1) : (m_EndCol + 1);
@@ -138,7 +144,7 @@ namespace Engine
             return res;
         }
 
-        public bool checkAteOpponent(Game i_Game)
+        public bool CheckAteOpponent(Game i_Game)
         {
             bool isValid = false;
             int differenceRows = (i_Game.CurrentPlayer == i_Game.Player1) ? (m_EndRow - m_StartRow) : (m_StartRow - m_EndRow);
@@ -147,23 +153,23 @@ namespace Engine
 
             if (differenceCols == 2 && differenceRows == 2)
             {
-                Board.Piece jumpedOverThisPieceIfRegular = potentialPieceJumpedOverIfRegular(i_Game);
+                Board.Piece jumpedOverThisPieceIfRegular = GetPotentialPieceJumpedOverIfRegular(i_Game);
                 Board.Piece jumpedOverThisPieceIfKing = null;
 
                 if (i_Game.Board.Content[m_StartRow, m_StartCol].IsKing == true)
                 {
-                    jumpedOverThisPieceIfKing = potentialPieceJumpedOverIfKingAndGoingToNotNativeDirection(i_Game);
+                    jumpedOverThisPieceIfKing = GetPotentialPieceJumpedOverIfKingAndGoingToNotNativeDirection(i_Game);
                 }
 
-                isValid = jumpedOverThisPieceIfRegular != null && checkOpponentIsLocatedInPotentialPiece(i_Game, jumpedOverThisPieceIfRegular) || 
-                    (jumpedOverThisPieceIfKing != null && checkOpponentIsLocatedInPotentialPiece(i_Game, jumpedOverThisPieceIfKing));
+                isValid = jumpedOverThisPieceIfRegular != null && CheckOpponentIsLocatedInPotentialPiece(i_Game, jumpedOverThisPieceIfRegular) || 
+                    (jumpedOverThisPieceIfKing != null && CheckOpponentIsLocatedInPotentialPiece(i_Game, jumpedOverThisPieceIfKing));
             }
 
             return isValid;
         }
 
         // Make sure not moving backwards, and if jumping over entity so making sure it's the opponent
-        private bool checkDiagonallyDirection(Game i_Game) 
+        private bool checkDiagonalDirection(Game i_Game) 
         {
             bool isValid = false;
             int differenceRows = (i_Game.CurrentPlayer == i_Game.Player1) ? (m_EndRow - m_StartRow) : (m_StartRow - m_EndRow);
@@ -177,20 +183,26 @@ namespace Engine
             } 
             else
             {
-                isValid = checkAteOpponent(i_Game);
+                isValid = CheckAteOpponent(i_Game);
             }
 
             return isValid;
         }
 
-        public bool IsValid(Game i_Game)
+        public bool IsValidForCurrentPlayer(Game i_Game)
         {
             return isInRange(i_Game.Board.Size) && checkCurrentPlayerPieceIsInStartingPosition(i_Game) &&
                 checkWhitespaceAtEndPosition(i_Game) && checkRequiredTurnsContainsThisTurn(i_Game) &&
-                checkDiagonallyDirection(i_Game);
+                checkDiagonalDirection(i_Game);
         }
 
-        public void checkIfNewEndPosIsCrownAndCrownIfNeeded(Game i_Game)
+        public bool IsValidForPlayer(Game i_Game, Player i_Player)
+        {
+            return isInRange(i_Game.Board.Size) && checkPlayerPieceIsInStartingPosition(i_Game, i_Player) &&
+                checkWhitespaceAtEndPosition(i_Game) && checkDiagonalDirection(i_Game);
+        }
+
+        public void CheckIfNewEndPosIsCrownAndCrownIfNeeded(Game i_Game)
         {
             int rowToBeCrowned;
             Board.Piece movedToHere = i_Game.Board.Content[m_EndRow, m_EndCol];
@@ -205,15 +217,35 @@ namespace Engine
             }
         }
 
-        public void updatePlayerPiecesListAccordingToTurn(Game i_Game)
+        public void UpdatePlayerPiecesListAccordingToTurn(Game i_Game)
         {
             i_Game.CurrentPlayer.Pieces.Remove(i_Game.Board.Content[m_StartRow, m_StartCol]);
             i_Game.CurrentPlayer.Pieces.Add(i_Game.Board.Content[m_EndRow, m_EndCol]);
         }
 
-        public PlayerTurn GenerateRandomValidTurn(Game i_Game)
+        public static PlayerTurn GenerateRandomValidTurn(Game i_Game)
         {
             PlayerTurn res = null;
+            Player currentPlayer = i_Game.CurrentPlayer;
+            List<PlayerTurn> requiredTurns = i_Game.RequiredTurns;
+            Random random = new Random();
+            Board.Piece chosenPiece;
+            List<PlayerTurn> chosenPieceAvailableMoves;
+
+            if (requiredTurns.Count == 0)
+            {
+                do
+                {
+                    chosenPiece = currentPlayer.Pieces[random.Next(currentPlayer.Pieces.Count)];
+                    chosenPieceAvailableMoves = chosenPiece.GetAvailableMoves(i_Game, currentPlayer);
+                } while (chosenPieceAvailableMoves.Count == 0);
+                res = chosenPieceAvailableMoves[random.Next(chosenPieceAvailableMoves.Count)];
+            }
+            else
+            {
+                res = requiredTurns[random.Next(requiredTurns.Count)];
+            }
+
             return res;
         }
     }
