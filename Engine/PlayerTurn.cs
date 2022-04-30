@@ -117,8 +117,8 @@ namespace Engine
             Board.Piece res = null;
             int potentialOpponentPieceColValue = (m_EndCol - m_StartCol == 2) ? (m_EndCol - 1) : (m_EndCol + 1);
             int potentialOpponentPieceRowValue = (i_Game.CurrentPlayer == i_Game.Player1) ? (m_EndRow - 1) : (m_EndRow + 1);
-            bool notHigherThanSupremum = potentialOpponentPieceColValue < i_Game.Board.Size && potentialOpponentPieceRowValue < i_Game.Board.Size;
-            bool notLessThanInfimum = potentialOpponentPieceColValue >= 0 && potentialOpponentPieceRowValue >= 0;
+            bool notHigherThanSupremum = potentialOpponentPieceColValue < i_Game.Board.Size - 1 && potentialOpponentPieceRowValue < i_Game.Board.Size - 1;
+            bool notLessThanInfimum = potentialOpponentPieceColValue > 0 && potentialOpponentPieceRowValue > 0;
 
             if (notHigherThanSupremum == true && notLessThanInfimum == true)
             {
@@ -133,8 +133,8 @@ namespace Engine
             Board.Piece res = null;
             int potentialOpponentPieceColValue = (m_EndCol - m_StartCol == 2) ? (m_EndCol - 1) : (m_EndCol + 1);
             int potentialOpponentPieceRowValue = (i_Game.CurrentPlayer == i_Game.Player1) ? (m_EndRow + 1) : (m_EndRow - 1);
-            bool notHigherThanSupremum = potentialOpponentPieceColValue < i_Game.Board.Size && potentialOpponentPieceRowValue < i_Game.Board.Size;
-            bool notLessThanInfimum = potentialOpponentPieceColValue >= 0 && potentialOpponentPieceRowValue >= 0;
+            bool notHigherThanSupremum = potentialOpponentPieceColValue < i_Game.Board.Size - 1 && potentialOpponentPieceRowValue < i_Game.Board.Size - 1;
+            bool notLessThanInfimum = potentialOpponentPieceColValue > 0 && potentialOpponentPieceRowValue > 0;
 
             if (notHigherThanSupremum == true && notLessThanInfimum == true)
             {

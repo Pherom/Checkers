@@ -201,7 +201,7 @@ namespace Engine
         private void DestroyOpponent(PlayerTurn i_Turn)
         {
             Board.Piece potentialMove = i_Turn.GetPotentialPieceJumpedOverIfRegular(this);
-            if (i_Turn.CheckOpponentIsLocatedInPotentialPiece(this, potentialMove))
+            if (potentialMove != null && i_Turn.CheckOpponentIsLocatedInPotentialPiece(this, potentialMove))
             {
                 updatePointsAndEmptyEatenOpponent(potentialMove);
             }
